@@ -1,0 +1,79 @@
+{
+  "author": "Guilherme Yamada Dantas — RM568506",
+  "validated_at": "2026-06-16",
+  "source": "Sen2Fire",
+  "zip_path": "data/raw/Sen2Fire.zip",
+  "size_bytes": 6346737700,
+  "md5_expected": "135be2af2a8577c6deb12cbd7cc76c1a",
+  "md5_observed": "135be2af2a8577c6deb12cbd7cc76c1a",
+  "members": 2466,
+  "extensions": {
+    "npz": 2466
+  },
+  "npz_keys": {
+    "image": {
+      "shape": [12, 512, 512],
+      "dtype": "int16"
+    },
+    "aerosol": {
+      "shape": [512, 512],
+      "dtype": "float32"
+    },
+    "label": {
+      "shape": [512, 512],
+      "dtype": "uint8",
+      "positive_value": 1
+    }
+  },
+  "raw_scene_counts": {
+    "scene1": 864,
+    "scene2": 594,
+    "scene3": 504,
+    "scene4": 504
+  },
+  "official_split_counts": {
+    "train": 1458,
+    "val": 504,
+    "test": 504
+  },
+  "raw_fire_distribution": {
+    "scene1": {
+      "patches": 864,
+      "positive_patches": 115,
+      "positive_pixels": 7779854,
+      "positive_ratio": 0.03434929
+    },
+    "scene2": {
+      "patches": 594,
+      "positive_patches": 38,
+      "positive_pixels": 1784143,
+      "positive_ratio": 0.01145785
+    },
+    "scene3": {
+      "patches": 504,
+      "positive_patches": 94,
+      "positive_pixels": 4694012,
+      "positive_ratio": 0.03552824
+    },
+    "scene4": {
+      "patches": 504,
+      "positive_patches": 102,
+      "positive_pixels": 7632679,
+      "positive_ratio": 0.05777055
+    }
+  },
+  "thresholded_manifest": {
+    "path": "data/processed/classification_manifest_sen2fire_only.csv",
+    "total_samples": 2447,
+    "class_counts": {
+      "fire": 325,
+      "healthy_forest": 2122,
+      "burned_scar": 0
+    },
+    "thresholds": {
+      "fire": 0.01,
+      "healthy_forest": 0.001
+    }
+  },
+  "conclusion": "Sen2Fire real validated; FLOGA ingestion remains required for burned_scar."
+}

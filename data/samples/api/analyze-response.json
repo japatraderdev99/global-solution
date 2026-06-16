@@ -1,0 +1,40 @@
+{
+  "request_id": "demo-001",
+  "status": "ok",
+  "generated_at": "2026-06-16T12:00:12Z",
+  "orbital": {
+    "class": "fire",
+    "confidence": 0.91,
+    "probabilities": {
+      "fire": 0.91,
+      "burned_scar": 0.06,
+      "healthy_forest": 0.03
+    },
+    "model_version": "mock-0.1.0"
+  },
+  "sensor": {
+    "device_id": "esp32-wokwi-001",
+    "smoke_ppm": 620,
+    "temperature_c": 42.6,
+    "humidity_pct": 31.4,
+    "signal_level": "high"
+  },
+  "risk": {
+    "score": 90,
+    "level": "critical",
+    "label": "Risco critico",
+    "factors": [
+      "orbital_fire_detected",
+      "high_smoke",
+      "high_temperature"
+    ]
+  },
+  "recommendation": {
+    "action": "dispatch_review",
+    "message": "Priorizar verificacao da area e confirmar foco ativo."
+  },
+  "location": {
+    "latitude": -3.4653,
+    "longitude": -62.2159
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "author": "Guilherme Yamada Dantas",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 0,
+      "left": 0,
+      "attrs": {}
+    },
+    {
+      "type": "wokwi-dht22",
+      "id": "dht",
+      "top": -80,
+      "left": 230,
+      "attrs": {
+        "temperature": "42.6",
+        "humidity": "31.4"
+      }
+    },
+    {
+      "type": "wokwi-slide-potentiometer",
+      "id": "smoke",
+      "top": 120,
+      "left": 230,
+      "attrs": {
+        "travelLength": "30"
+      }
+    },
+    {
+      "type": "wokwi-led",
+      "id": "led",
+      "top": 205,
+      "left": -80,
+      "attrs": {
+        "color": "red"
+      }
+    },
+    {
+      "type": "wokwi-resistor",
+      "id": "r1",
+      "top": 212,
+      "left": -20,
+      "attrs": {
+        "value": "220"
+      }
+    },
+    {
+      "type": "wokwi-buzzer",
+      "id": "buzzer",
+      "top": 120,
+      "left": -95,
+      "attrs": {
+        "volume": "0.1"
+      }
+    }
+  ],
+  "connections": [
+    ["esp:3V3", "dht:VCC", "red", []],
+    ["esp:GND.1", "dht:GND", "black", []],
+    ["esp:15", "dht:SDA", "green", []],
+    ["esp:3V3", "smoke:VCC", "red", []],
+    ["esp:GND.2", "smoke:GND", "black", []],
+    ["esp:34", "smoke:SIG", "orange", []],
+    ["esp:2", "r1:1", "green", []],
+    ["r1:2", "led:A", "green", []],
+    ["led:C", "esp:GND.1", "black", []],
+    ["esp:18", "buzzer:1", "purple", []],
+    ["buzzer:2", "esp:GND.2", "black", []]
+  ],
+  "serialMonitor": {
+    "display": "always",
+    "newline": "lf"
+  }
+}

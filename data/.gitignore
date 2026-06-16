@@ -1,0 +1,9 @@
+# Dados brutos/pesados não vão para o git.
+*.tif
+*.tiff
+*.zip
+*.npy
+*.h5
+!.gitkeep
+!README.md
+!samples/**

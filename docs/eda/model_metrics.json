@@ -1,0 +1,71 @@
+{
+  "meta": {
+    "generated_at": "2026-06-17T00:09:16Z",
+    "framework": "pytorch",
+    "model": "SmallBurnCNN",
+    "epochs": 8,
+    "input": "RGB(B4,B3,B2)+NDVI(B8A,B4)+NBR(B8A,B12), 64x64",
+    "rebalancing": "Treino com undersample de healthy_forest para 650 amostras; minorias preservadas; WeightedRandomSampler inverso a frequencia; pesos de classe sqrt; augmentacao com flips/rotacao e jitter leve em fire/burned_scar.",
+    "notes": "Treino CPU-friendly em dados 60m ja existentes; classes fire e burned_scar vêm de fontes diferentes, e burned_scar possui suporte muito baixo no teste."
+  },
+  "classes": [
+    "fire",
+    "burned_scar",
+    "healthy_forest"
+  ],
+  "split_evaluated": "test",
+  "dataset": {
+    "train": 831,
+    "val": 1109,
+    "test": 1099
+  },
+  "overall": {
+    "accuracy": 0.616015,
+    "f1_macro": 0.400038,
+    "f1_weighted": 0.693266
+  },
+  "per_class": {
+    "fire": {
+      "precision": 0.220049,
+      "recall": 0.9375,
+      "f1": 0.356436,
+      "support": 96
+    },
+    "burned_scar": {
+      "precision": 0.0625,
+      "recall": 0.461538,
+      "f1": 0.110092,
+      "support": 13
+    },
+    "healthy_forest": {
+      "precision": 0.978114,
+      "recall": 0.586869,
+      "f1": 0.733586,
+      "support": 990
+    }
+  },
+  "confusion_matrix": {
+    "labels": [
+      "fire",
+      "burned_scar",
+      "healthy_forest"
+    ],
+    "matrix": [
+      [
+        90,
+        0,
+        6
+      ],
+      [
+        0,
+        6,
+        7
+      ],
+      [
+        319,
+        90,
+        581
+      ]
+    ]
+  }
+}

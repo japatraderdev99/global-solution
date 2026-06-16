@@ -1,0 +1,18 @@
+{
+  "request_id": "demo-001",
+  "image": {
+    "source_type": "sample",
+    "uri": "amazon-fire-001.jpg",
+    "captured_at": "2026-06-16T12:00:00Z"
+  },
+  "sensor": {
+    "device_id": "esp32-wokwi-001",
+    "smoke_ppm": 620,
+    "temperature_c": 42.6,
+    "humidity_pct": 31.4,
+    "battery_pct": 87,
+    "latitude": -3.4653,
+    "longitude": -62.2159,
+    "measured_at": "2026-06-16T12:00:10Z"
+  }
+}

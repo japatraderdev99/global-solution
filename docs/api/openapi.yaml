@@ -1,0 +1,363 @@
+openapi: 3.0.3
+info:
+  title: Sentinela Orbital API
+  version: 0.1.0
+  description: >
+    Contrato da Fase 0.5 para analise de risco ambiental combinando imagem
+    orbital e leitura de sensor de solo.
+servers:
+  - url: http://localhost:8000
+    description: Mock local
+paths:
+  /health:
+    get:
+      summary: Verifica se a API esta operacional.
+      operationId: getHealth
+      responses:
+        "200":
+          description: Servico disponivel.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                service: sentinela-orbital-api
+                version: 0.1.0
+  /analyze:
+    post:
+      summary: Analisa imagem orbital e leitura do sensor para calcular risco.
+      operationId: analyzeRisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeRequest"
+            examples:
+              imageUrl:
+                summary: Requisicao usando URL de imagem.
+                value:
+                  request_id: demo-001
+                  image:
+                    source_type: url
+                    uri: https://example.org/samples/amazon-fire-001.jpg
+                    captured_at: "2026-06-16T12:00:00Z"
+                  sensor:
+                    device_id: esp32-wokwi-001
+                    smoke_ppm: 620
+                    temperature_c: 42.6
+                    humidity_pct: 31.4
+                    battery_pct: 87
+                    latitude: -3.4653
+                    longitude: -62.2159
+                    measured_at: "2026-06-16T12:00:10Z"
+      responses:
+        "200":
+          description: Analise concluida.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyzeResponse"
+              example:
+                request_id: demo-001
+                status: ok
+                generated_at: "2026-06-16T12:00:12Z"
+                orbital:
+                  class: fire
+                  confidence: 0.91
+                  probabilities:
+                    fire: 0.91
+                    burned_scar: 0.06
+                    healthy_forest: 0.03
+                  model_version: mock-0.1.0
+                sensor:
+                  device_id: esp32-wokwi-001
+                  smoke_ppm: 620
+                  temperature_c: 42.6
+                  humidity_pct: 31.4
+                  signal_level: high
+                risk:
+                  score: 90
+                  level: critical
+                  label: Risco critico
+                  factors:
+                    - orbital_fire_detected
+                    - high_smoke
+                    - high_temperature
+                recommendation:
+                  action: dispatch_review
+                  message: Priorizar verificacao da area e confirmar foco ativo.
+                location:
+                  latitude: -3.4653
+                  longitude: -62.2159
+        "400":
+          description: Payload invalido ou incompleto.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                error:
+                  code: invalid_payload
+                  message: "Campo obrigatorio ausente: image.uri"
+        "413":
+          description: Payload acima do limite aceito.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                status: error
+                error:
+                  code: payload_too_large
+                  message: Envie image.uri apontando para Cloud Storage ou URL publica.
+        "500":
+          description: Erro interno durante a analise.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+        - version
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        service:
+          type: string
+        version:
+          type: string
+    AnalyzeRequest:
+      type: object
+      required:
+        - image
+        - sensor
+      properties:
+        request_id:
+          type: string
+          description: Identificador gerado pelo cliente para rastreio.
+          example: demo-001
+        image:
+          $ref: "#/components/schemas/ImageInput"
+        sensor:
+          $ref: "#/components/schemas/SensorInput"
+    ImageInput:
+      type: object
+      required:
+        - source_type
+        - uri
+      properties:
+        source_type:
+          type: string
+          enum: [gcs, url, sample]
+          description: Origem da imagem. Use sample apenas em demo local.
+        uri:
+          type: string
+          description: URL, objeto no Cloud Storage ou nome de amostra local.
+          example: samples/amazon-fire-001.jpg
+        captured_at:
+          type: string
+          format: date-time
+    SensorInput:
+      type: object
+      required:
+        - device_id
+        - smoke_ppm
+        - temperature_c
+      properties:
+        device_id:
+          type: string
+          example: esp32-wokwi-001
+        smoke_ppm:
+          type: number
+          minimum: 0
+          example: 620
+        temperature_c:
+          type: number
+          minimum: -20
+          maximum: 80
+          example: 42.6
+        humidity_pct:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 31.4
+        battery_pct:
+          type: number
+          minimum: 0
+          maximum: 100
+          nullable: true
+          example: 87
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+          nullable: true
+          example: -3.4653
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+          nullable: true
+          example: -62.2159
+        measured_at:
+          type: string
+          format: date-time
+          nullable: true
+    AnalyzeResponse:
+      type: object
+      required:
+        - status
+        - generated_at
+        - orbital
+        - sensor
+        - risk
+        - recommendation
+      properties:
+        request_id:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [ok]
+        generated_at:
+          type: string
+          format: date-time
+        orbital:
+          $ref: "#/components/schemas/OrbitalResult"
+        sensor:
+          $ref: "#/components/schemas/SensorResult"
+        risk:
+          $ref: "#/components/schemas/RiskResult"
+        recommendation:
+          $ref: "#/components/schemas/Recommendation"
+        location:
+          $ref: "#/components/schemas/Location"
+    OrbitalResult:
+      type: object
+      required:
+        - class
+        - confidence
+        - probabilities
+        - model_version
+      properties:
+        class:
+          type: string
+          enum: [fire, burned_scar, healthy_forest, unknown]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        probabilities:
+          type: object
+          required:
+            - fire
+            - burned_scar
+            - healthy_forest
+          properties:
+            fire:
+              type: number
+              minimum: 0
+              maximum: 1
+            burned_scar:
+              type: number
+              minimum: 0
+              maximum: 1
+            healthy_forest:
+              type: number
+              minimum: 0
+              maximum: 1
+        model_version:
+          type: string
+    SensorResult:
+      type: object
+      required:
+        - device_id
+        - smoke_ppm
+        - temperature_c
+        - signal_level
+      properties:
+        device_id:
+          type: string
+        smoke_ppm:
+          type: number
+        temperature_c:
+          type: number
+        humidity_pct:
+          type: number
+          nullable: true
+        signal_level:
+          type: string
+          enum: [low, moderate, high, critical]
+    RiskResult:
+      type: object
+      required:
+        - score
+        - level
+        - label
+        - factors
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        level:
+          type: string
+          enum: [low, moderate, high, critical]
+        label:
+          type: string
+        factors:
+          type: array
+          items:
+            type: string
+    Recommendation:
+      type: object
+      required:
+        - action
+        - message
+      properties:
+        action:
+          type: string
+          enum: [monitor, review, dispatch_review, emergency]
+        message:
+          type: string
+    Location:
+      type: object
+      nullable: true
+      properties:
+        latitude:
+          type: number
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          minimum: -180
+          maximum: 180
+    ErrorResponse:
+      type: object
+      required:
+        - status
+        - error
+      properties:
+        status:
+          type: string
+          enum: [error]
+        error:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: string
+            message:
+              type: string

@@ -1,0 +1,78 @@
+{
+  "meta": {
+    "generated_at": "2026-06-16T23:27:19Z",
+    "manifest_path": "data/processed/classification_manifest_sen2fire_only.csv",
+    "thresholds": {
+      "fire": 0.01,
+      "burned_scar": 0.02,
+      "negative": 0.001
+    },
+    "sources": {
+      "sen2fire": {
+        "doi": "10.5281/zenodo.10881058",
+        "license": "CC-BY-4.0"
+      },
+      "floga": {
+        "repository": "https://github.com/Orion-AI-Lab/FLOGA",
+        "data_license": "CC-BY-4.0",
+        "code_license": "MIT"
+      }
+    }
+  },
+  "total_samples": 2447,
+  "class_counts": {
+    "fire": 325,
+    "healthy_forest": 2122
+  },
+  "split_counts": {
+    "test": 501,
+    "train": 1448,
+    "val": 498
+  },
+  "source_counts": {
+    "sen2fire": 2447
+  },
+  "split_class_matrix": {
+    "test": {
+      "fire": 96,
+      "healthy_forest": 405
+    },
+    "train": {
+      "fire": 143,
+      "healthy_forest": 1305
+    },
+    "val": {
+      "fire": 86,
+      "healthy_forest": 412
+    }
+  },
+  "positive_ratio_by_label": {
+    "healthy_forest": {
+      "min": 0.0,
+      "median": 0.0,
+      "max": 0.00083923
+    },
+    "fire": {
+      "min": 0.01041412,
+      "median": 0.17694473,
+      "max": 0.98218918
+    }
+  },
+  "examples_by_label": {
+    "fire": [
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_10.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_11.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_12.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_13.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_14.npz"
+    ],
+    "healthy_forest": [
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_1.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_18.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_19.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_2.npz",
+      "data/raw/Sen2Fire/scene1/scene_1_patch_10_20.npz"
+    ]
+  },
+  "group_leakage": {}
+}

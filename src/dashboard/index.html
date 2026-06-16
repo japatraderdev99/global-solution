@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sentinela Orbital — Estação de Solo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <circle cx="16" cy="16" r="13" class="bm-orbit"/>
+          <circle cx="16" cy="16" r="3.4" class="bm-core"/>
+          <circle cx="27" cy="9" r="1.8" class="bm-sat"/>
+        </svg>
+      </span>
+      <span class="brand-text">
+        <span class="brand-name">Sentinela Orbital</span>
+        <span class="brand-sub">estação de solo · bacia amazônica</span>
+      </span>
+    </div>
+
+    <nav class="viewtabs" role="tablist" aria-label="Vistas">
+      <button class="vtab active" id="tab-ops" role="tab" aria-selected="true" type="button">Operação</button>
+      <button class="vtab" id="tab-data" role="tab" aria-selected="false" type="button">Dados</button>
+    </nav>
+
+    <div class="topbar-meta">
+      <div class="enlace" id="enlace">
+        <span class="enlace-dot" id="status-dot"></span>
+        <span class="enlace-label" id="status-label">verificando enlace</span>
+      </div>
+      <div class="missionclock">
+        <span class="mc-time" id="utc-clock">--:--:--</span>
+        <span class="mc-zone">UTC</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout" id="view-ops">
+
+    <aside class="sidebar">
+
+      <!-- ── SIGNATURE: orbital scope ─────────────── -->
+      <section class="panel scope-panel" id="risk-card">
+        <div class="panel-head">
+          <span class="eyebrow">índice de risco</span>
+          <span class="scan-stamp" id="last-update">—</span>
+        </div>
+
+        <div class="scope">
+          <svg class="scope-svg" viewBox="0 0 200 200" aria-hidden="true">
+            <defs>
+              <linearGradient id="sweepGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"  stop-color="var(--sweep)" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="var(--sweep)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+
+            <circle class="scope-bezel" cx="100" cy="100" r="95"/>
+            <circle class="scope-ticks" cx="100" cy="100" r="89"/>
+
+            <g class="scope-sweep" id="scope-sweep">
+              <path d="M100 100 L100 18 A82 82 0 0 1 151.4 36.6 Z" fill="url(#sweepGrad)"/>
+            </g>
+
+            <circle class="gauge-track" cx="100" cy="100" r="74"
+                    transform="rotate(135 100 100)"/>
+            <circle class="gauge-fill" id="gauge-fill" cx="100" cy="100" r="74"
+                    transform="rotate(135 100 100)"/>
+
+            <line class="reticle" x1="100" y1="92" x2="100" y2="108"/>
+            <line class="reticle" x1="92" y1="100" x2="108" y2="100"/>
+          </svg>
+
+          <div class="scope-center">
+            <div class="scope-score-row">
+              <span class="scope-score" id="risk-score">—</span>
+              <span class="scope-max">/100</span>
+            </div>
+            <span class="scope-level" id="risk-badge">aguardando</span>
+          </div>
+        </div>
+
+        <p class="directive" id="risk-action">Aguardando enlace com a estação de solo.</p>
+
+        <div class="anomalies">
+          <span class="anomalies-label">anomalias detectadas</span>
+          <ul class="factor-list" id="factor-list">
+            <li class="factor-empty">nenhuma varredura executada</li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- ── orbital classification ───────────────── -->
+      <section class="panel">
+        <div class="panel-head"><span class="eyebrow">varredura orbital</span></div>
+        <div class="orbital-row">
+          <span class="orbital-class" id="orbital-class">—</span>
+          <span class="orbital-conf" id="orbital-conf"></span>
+        </div>
+        <div class="spectral">
+          <div class="band">
+            <span class="band-name">Fogo</span>
+            <div class="band-track"><div class="band-fill fire" id="p-fire"></div></div>
+            <span class="band-pct" id="pv-fire">—</span>
+          </div>
+          <div class="band">
+            <span class="band-name">Cicatriz</span>
+            <div class="band-track"><div class="band-fill scar" id="p-scar"></div></div>
+            <span class="band-pct" id="pv-scar">—</span>
+          </div>
+          <div class="band">
+            <span class="band-name">Floresta</span>
+            <div class="band-track"><div class="band-fill forest" id="p-forest"></div></div>
+            <span class="band-pct" id="pv-forest">—</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── ground sensor ────────────────────────── -->
+      <section class="panel">
+        <div class="panel-head">
+          <span class="eyebrow">telemetria de solo</span>
+          <span class="chip" id="s-device">esp32 · —</span>
+        </div>
+        <div class="telemetry">
+          <div class="tcell">
+            <span class="t-val" id="s-smoke">—</span>
+            <span class="t-unit">ppm</span>
+            <span class="t-lbl">fumaça</span>
+          </div>
+          <div class="tcell">
+            <span class="t-val" id="s-temp">—</span>
+            <span class="t-unit">°C</span>
+            <span class="t-lbl">temperatura</span>
+          </div>
+          <div class="tcell">
+            <span class="t-val" id="s-hum">—</span>
+            <span class="t-unit">%</span>
+            <span class="t-lbl">umidade</span>
+          </div>
+          <div class="tcell">
+            <span class="t-val signal" id="s-signal">—</span>
+            <span class="t-unit">&nbsp;</span>
+            <span class="t-lbl">nível de sinal</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── new scan ─────────────────────────────── -->
+      <section class="panel">
+        <div class="panel-head"><span class="eyebrow">nova varredura</span></div>
+        <form id="analyze-form" autocomplete="off">
+          <div class="field">
+            <label class="field-lbl" for="f-uri">URI da imagem orbital</label>
+            <input class="field-in" type="text" id="f-uri"
+              placeholder="url, objeto no Storage ou amostra"
+              value="samples/amazon-fire-001.jpg">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-lbl" for="f-smoke">Fumaça (ppm)</label>
+              <input class="field-in" type="number" id="f-smoke" value="620" min="0">
+            </div>
+            <div class="field">
+              <label class="field-lbl" for="f-temp">Temp. (°C)</label>
+              <input class="field-in" type="number" id="f-temp" value="42.6" step="0.1" min="-20" max="80">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label class="field-lbl" for="f-lat">Latitude</label>
+              <input class="field-in" type="number" id="f-lat" value="-3.4653" step="0.0001">
+            </div>
+            <div class="field">
+              <label class="field-lbl" for="f-lon">Longitude</label>
+              <input class="field-in" type="number" id="f-lon" value="-62.2159" step="0.0001">
+            </div>
+          </div>
+          <button type="submit" id="btn-submit" class="btn">
+            <span class="btn-label">executar varredura</span>
+          </button>
+          <p class="field-error" id="form-error"></p>
+        </form>
+      </section>
+
+    </aside>
+
+    <section class="map-pane">
+      <div id="map"></div>
+      <div class="map-scanlines" aria-hidden="true"></div>
+      <div class="map-readout">
+        <span class="mr-eyebrow">alvo</span>
+        <span class="mr-coords" id="map-coords">sem alvo</span>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── VISTA: DADOS / EDA ───────────────────────── -->
+  <section class="dataview" id="view-data" hidden>
+    <div class="dataview-inner">
+
+      <header class="data-head">
+        <div>
+          <span class="eyebrow">conjunto de dados · fase 1</span>
+          <h1 class="data-title">Classificação derivada de máscaras orbitais</h1>
+          <p class="data-sub">Sen2Fire + FLOGA → três classes do contrato</p>
+        </div>
+        <div class="data-stamp">
+          <span class="ds-total" id="eda-total">—</span>
+          <span class="ds-total-lbl">amostras</span>
+        </div>
+      </header>
+
+      <p class="data-empty" id="eda-empty" hidden>
+        EDA indisponível. Gere <code>docs/eda/eda_summary.json</code> e sirva o dashboard
+        a partir da raiz do repositório (ver <code>src/data/README.md</code>).
+      </p>
+
+      <div class="data-grid" id="eda-grid">
+
+        <section class="panel span2">
+          <div class="panel-head">
+            <span class="eyebrow">distribuição por classe</span>
+            <span class="chip" id="eda-gen">—</span>
+          </div>
+          <div class="classbars" id="eda-classbars"></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">verificação de vazamento</span></div>
+          <div class="leak" id="eda-leak"></div>
+        </section>
+
+        <section class="panel span2">
+          <div class="panel-head"><span class="eyebrow">matriz split × classe</span></div>
+          <div class="table-wrap"><table class="dtable" id="eda-matrix"></table></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">divisão treino · val · teste</span></div>
+          <div class="splitbars" id="eda-splitbars"></div>
+        </section>
+
+        <section class="panel span2">
+          <div class="panel-head"><span class="eyebrow">razão de pixels positivos</span></div>
+          <div class="table-wrap"><table class="dtable" id="eda-ratio"></table></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">proveniência</span></div>
+          <div class="prov" id="eda-prov"></div>
+        </section>
+
+      </div>
+
+      <header class="data-subhead">
+        <div>
+          <span class="eyebrow">desempenho do modelo · fase 2</span>
+          <h2 class="data-subtitle">Classificador de visão computacional (CNN)</h2>
+        </div>
+        <span class="chip" id="model-name">—</span>
+      </header>
+
+      <p class="data-empty" id="model-empty" hidden>
+        Métricas do modelo indisponíveis. Gere <code>docs/eda/model_metrics.json</code> (ver src/model/README.md).
+      </p>
+
+      <div class="data-grid" id="model-grid">
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">F1 macro</span></div>
+          <div class="metric-hero"><span class="metric-big" id="m-f1macro">—</span></div>
+          <p class="metric-cap">métrica principal — robusta a desbalanceamento</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">acurácia · F1 ponderado</span></div>
+          <div class="metric-pair">
+            <div><span class="metric-mid" id="m-acc">—</span><span class="metric-lbl">acurácia</span></div>
+            <div><span class="metric-mid" id="m-f1w">—</span><span class="metric-lbl">F1 ponderado</span></div>
+          </div>
+          <p class="metric-cap">acurácia isolada engana com 93% de floresta</p>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">conjunto avaliado</span></div>
+          <div class="metric-pair">
+            <div><span class="metric-mid" id="m-testn">—</span><span class="metric-lbl">teste</span></div>
+            <div><span class="metric-mid" id="m-trainn">—</span><span class="metric-lbl">treino</span></div>
+          </div>
+          <p class="metric-cap" id="m-input">—</p>
+        </section>
+
+        <section class="panel span2">
+          <div class="panel-head"><span class="eyebrow">métricas por classe</span></div>
+          <div class="table-wrap"><table class="dtable" id="model-perclass"></table></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><span class="eyebrow">matriz de confusão</span></div>
+          <div class="table-wrap"><table class="dtable cm" id="model-cm"></table></div>
+          <p class="metric-cap">linhas = verdadeiro · colunas = previsto</p>
+        </section>
+      </div>
+
+      <p class="model-note" id="model-note"></p>
+
+    </div>
+  </section>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js"></script>
+</body>
+</html>
