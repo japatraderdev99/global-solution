@@ -1,7 +1,7 @@
 'use strict';
 
 /* Sentinela Orbital — console da estação de solo.
-   API publicada no Google Cloud Run (Fase 3). Para rodar contra o mock local,
+   API publicada no Google Cloud Run (Fase 3). Para rodar contra a API local,
    troque por 'http://localhost:8000'. */
 const API_BASE = 'https://sentinela-api-520322249774.us-central1.run.app';
 

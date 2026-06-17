@@ -4,7 +4,7 @@ Interface de monitoramento ambiental em tempo real. Consome a API de análise de
 
 ## Como executar
 
-**1. Suba o mock (ou API real) em outra aba de terminal:**
+**1. Suba a API local (ou use a API publicada) em outra aba de terminal:**
 
 ```bash
 python3 src/api/mock_server.py
@@ -50,4 +50,4 @@ O endereço base da API está em `app.js`, linha 3:
 const API_BASE = 'http://localhost:8000';
 ```
 
-Altere para o endpoint real do Cloud Run após o deploy da Fase 3.
+Altere para `http://localhost:8000` se quiser usar a API local.
