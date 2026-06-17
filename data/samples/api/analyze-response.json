@@ -4,13 +4,13 @@
   "generated_at": "2026-06-16T12:00:12Z",
   "orbital": {
     "class": "fire",
-    "confidence": 0.91,
+    "confidence": 0.866518,
     "probabilities": {
-      "fire": 0.91,
-      "burned_scar": 0.06,
-      "healthy_forest": 0.03
+      "fire": 0.866518,
+      "burned_scar": 0.012658,
+      "healthy_forest": 0.120824
     },
-    "model_version": "mock-0.1.0"
+    "model_version": "smallburncnn-1.0"
   },
   "sensor": {
     "device_id": "esp32-wokwi-001",

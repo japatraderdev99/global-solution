@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.DS_Store
+
+# O build precisa dos patches .npy pequenos em samples/.
+!samples/*.npy

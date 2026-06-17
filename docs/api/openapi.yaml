@@ -7,7 +7,9 @@ info:
     orbital e leitura de sensor de solo.
 servers:
   - url: http://localhost:8000
-    description: Mock local
+    description: Servico local
+  - url: https://sentinela-api-520322249774.us-central1.run.app
+    description: Servico Cloud Run
 paths:
   /health:
     get:
@@ -70,7 +72,7 @@ paths:
                     fire: 0.91
                     burned_scar: 0.06
                     healthy_forest: 0.03
-                  model_version: mock-0.1.0
+                  model_version: smallburncnn-1.0
                 sensor:
                   device_id: esp32-wokwi-001
                   smoke_ppm: 620

@@ -1,9 +1,11 @@
-# API Sentinela Orbital — container para Cloud Run.
-# Sem dependencias externas (biblioteca padrao do Python).
+# API Sentinela Orbital - container para Cloud Run.
 FROM python:3.12-slim
 
 WORKDIR /app
-COPY mock_server.py ./
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . ./
 
 # Cloud Run injeta a porta via $PORT (default 8080).
 ENV PORT=8080

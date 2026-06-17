@@ -3,10 +3,16 @@ from __future__ import annotations
 import json
 import math
 import os
+import shutil
+import urllib.request
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from pathlib import Path
 from typing import Any
 
+import numpy as np
+import torch
+from torch import nn
 
 # 0.0.0.0 + porta via $PORT para rodar no Cloud Run; localmente cai em 8000.
 HOST = os.environ.get("HOST", "0.0.0.0")
@@ -14,10 +20,151 @@ PORT = int(os.environ.get("PORT", "8000"))
 SERVICE = "sentinela-orbital-api"
 VERSION = "0.1.0"
 MAX_BODY_BYTES = 1_000_000
+MODEL_VERSION = os.environ.get("MODEL_VERSION", "smallburncnn-1.0")
+MODEL_GCS_URI = os.environ.get("MODEL_GCS_URI", "gs://sentinela-orbital-models/small_burn_cnn.pt")
+MODEL_PATH = Path(os.environ.get("MODEL_PATH", "/tmp/small_burn_cnn.pt"))
+LOCAL_MODEL_CANDIDATES = (Path("small_burn_cnn.pt"), Path("models/small_burn_cnn.pt"), Path("../models/small_burn_cnn.pt"))
+BASE_DIR = Path(__file__).resolve().parent
+CLASSES = ["fire", "burned_scar", "healthy_forest"]
+SAMPLE_PATCHES = {
+    "amazon-fire-001.jpg": BASE_DIR / "samples" / "fire.npy",
+    "samples/amazon-fire-001.jpg": BASE_DIR / "samples" / "fire.npy",
+    "amazon-burned-scar-001.jpg": BASE_DIR / "samples" / "burned_scar.npy",
+    "samples/amazon-burned-scar-001.jpg": BASE_DIR / "samples" / "burned_scar.npy",
+    "amazon-scar-001.jpg": BASE_DIR / "samples" / "burned_scar.npy",
+    "samples/amazon-scar-001.jpg": BASE_DIR / "samples" / "burned_scar.npy",
+    "amazon-healthy-001.jpg": BASE_DIR / "samples" / "healthy_forest.npy",
+    "samples/amazon-healthy-001.jpg": BASE_DIR / "samples" / "healthy_forest.npy",
+    "amazon-forest-001.jpg": BASE_DIR / "samples" / "healthy_forest.npy",
+    "samples/amazon-forest-001.jpg": BASE_DIR / "samples" / "healthy_forest.npy",
+}
+_MODEL: nn.Module | None = None
+_MODEL_LOAD_ERROR: str | None = None
 
 
 def utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+class SmallBurnCNN(nn.Module):
+    def __init__(self, in_channels: int = 5, num_classes: int = 3) -> None:
+        super().__init__()
+        self.features = nn.Sequential(
+            conv_block(in_channels, 16),
+            nn.MaxPool2d(2),
+            conv_block(16, 32),
+            nn.MaxPool2d(2),
+            conv_block(32, 64),
+            nn.MaxPool2d(2),
+            conv_block(64, 96),
+            nn.AdaptiveAvgPool2d(1),
+        )
+        self.head = nn.Sequential(nn.Flatten(), nn.Dropout(0.2), nn.Linear(96, num_classes))
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return self.head(self.features(x))
+
+
+def conv_block(in_channels: int, out_channels: int) -> nn.Sequential:
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1, bias=False),
+        nn.BatchNorm2d(out_channels),
+        nn.ReLU(inplace=True),
+        nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False),
+        nn.BatchNorm2d(out_channels),
+        nn.ReLU(inplace=True),
+    )
+
+
+def parse_gcs_uri(uri: str) -> tuple[str, str] | None:
+    if not uri.startswith("gs://"):
+        return None
+    path = uri[5:]
+    if "/" not in path:
+        return None
+    bucket, blob = path.split("/", 1)
+    return bucket, blob
+
+
+def ensure_model_file() -> Path:
+    if MODEL_PATH.exists():
+        return MODEL_PATH
+
+    for candidate in LOCAL_MODEL_CANDIDATES:
+        if candidate.exists():
+            MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(candidate, MODEL_PATH)
+            return MODEL_PATH
+
+    parsed = parse_gcs_uri(MODEL_GCS_URI)
+    if parsed:
+        bucket, blob = parsed
+        try:
+            from google.cloud import storage
+
+            MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            storage.Client().bucket(bucket).blob(blob).download_to_filename(str(MODEL_PATH))
+            return MODEL_PATH
+        except Exception as exc:
+            print(f"[aviso] download autenticado do modelo falhou: {exc}")
+
+        public_url = f"https://storage.googleapis.com/{bucket}/{blob}"
+        try:
+            MODEL_PATH.parent.mkdir(parents=True, exist_ok=True)
+            urllib.request.urlretrieve(public_url, MODEL_PATH)
+            return MODEL_PATH
+        except Exception as exc:
+            print(f"[aviso] download publico do modelo falhou: {exc}")
+
+    raise FileNotFoundError(f"Modelo indisponivel em {MODEL_PATH} ou {MODEL_GCS_URI}")
+
+
+def get_model() -> nn.Module | None:
+    global _MODEL, _MODEL_LOAD_ERROR
+    if _MODEL is not None:
+        return _MODEL
+    if _MODEL_LOAD_ERROR is not None:
+        return None
+
+    try:
+        model_path = ensure_model_file()
+        checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
+        model = SmallBurnCNN()
+        model.load_state_dict(checkpoint["model_state_dict"])
+        model.eval()
+        _MODEL = model
+        print(f"Modelo carregado: {model_path} ({MODEL_VERSION})")
+        return _MODEL
+    except Exception as exc:
+        _MODEL_LOAD_ERROR = str(exc)
+        print(f"[erro] modelo indisponivel: {_MODEL_LOAD_ERROR}")
+        return None
+
+
+def normalize_uri(image_uri: str) -> str:
+    normalized = image_uri.strip().lower()
+    if normalized.startswith("gs://"):
+        normalized = normalized.rsplit("/", 1)[-1]
+    elif "://" in normalized:
+        normalized = normalized.split("://", 1)[1].split("/", 1)[-1]
+    return normalized
+
+
+def patch_for_uri(image_uri: str) -> Path | None:
+    normalized = normalize_uri(image_uri)
+    if normalized in SAMPLE_PATCHES:
+        return SAMPLE_PATCHES[normalized]
+    basename = normalized.rsplit("/", 1)[-1]
+    return SAMPLE_PATCHES.get(basename)
+
+
+def unknown_orbital_result() -> dict[str, Any]:
+    return {
+        "class": "unknown",
+        "confidence": 0.0,
+        "probabilities": {"fire": 0.0, "burned_scar": 0.0, "healthy_forest": 0.0},
+        "model_version": MODEL_VERSION,
+    }
 
 
 def classify_sensor(smoke_ppm: float, temperature_c: float) -> tuple[str, list[str]]:
@@ -46,27 +193,32 @@ def classify_sensor(smoke_ppm: float, temperature_c: float) -> tuple[str, list[s
     return "low", factors
 
 
-def mock_orbital_result(image_uri: str) -> dict[str, Any]:
-    normalized = image_uri.lower()
-    if "scar" in normalized or "queimada" in normalized or "burned" in normalized:
-        return {
-            "class": "burned_scar",
-            "confidence": 0.84,
-            "probabilities": {"fire": 0.08, "burned_scar": 0.84, "healthy_forest": 0.08},
-            "model_version": "mock-0.1.0",
-        }
-    if "healthy" in normalized or "forest" in normalized or "saudavel" in normalized:
-        return {
-            "class": "healthy_forest",
-            "confidence": 0.88,
-            "probabilities": {"fire": 0.05, "burned_scar": 0.07, "healthy_forest": 0.88},
-            "model_version": "mock-0.1.0",
-        }
+def orbital_result(image_uri: str) -> dict[str, Any]:
+    patch_path = patch_for_uri(image_uri)
+    if patch_path is None or not patch_path.exists():
+        return unknown_orbital_result()
+
+    model = get_model()
+    if model is None:
+        return unknown_orbital_result()
+
+    patch = np.load(patch_path).astype(np.float32)
+    if patch.shape == (64, 64, 5):
+        patch = np.transpose(patch, (2, 0, 1))
+    if patch.shape != (5, 64, 64):
+        raise ValueError(f"Patch invalido para inferencia: {patch_path} shape={patch.shape}")
+
+    x = torch.from_numpy(patch).unsqueeze(0)
+    with torch.no_grad():
+        probs_tensor = torch.softmax(model(x), dim=1).squeeze(0)
+    probs = [float(value) for value in probs_tensor.tolist()]
+    best_idx = int(np.argmax(probs))
+    probabilities = {label: round(probs[idx], 6) for idx, label in enumerate(CLASSES)}
     return {
-        "class": "fire",
-        "confidence": 0.91,
-        "probabilities": {"fire": 0.91, "burned_scar": 0.06, "healthy_forest": 0.03},
-        "model_version": "mock-0.1.0",
+        "class": CLASSES[best_idx],
+        "confidence": round(probs[best_idx], 6),
+        "probabilities": probabilities,
+        "model_version": MODEL_VERSION,
     }
 
 
@@ -153,7 +305,7 @@ def analyze(payload: dict[str, Any]) -> dict[str, Any]:
     smoke_ppm = float(sensor["smoke_ppm"])
     temperature_c = float(sensor["temperature_c"])
     sensor_level, sensor_factors = classify_sensor(smoke_ppm, temperature_c)
-    orbital = mock_orbital_result(image_uri)
+    orbital = orbital_result(image_uri)
     risk = risk_from_inputs(orbital["class"], sensor_level, sensor_factors)
 
     location = None
@@ -200,7 +352,16 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/health":
-            self._send_json(200, {"status": "ok", "service": SERVICE, "version": VERSION})
+            self._send_json(
+                200,
+                {
+                    "status": "ok",
+                    "service": SERVICE,
+                    "version": VERSION,
+                    "model_version": MODEL_VERSION,
+                    "model_loaded": get_model() is not None,
+                },
+            )
             return
         if self.path == "/sample-response":
             sample = analyze(
@@ -262,8 +423,9 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def run() -> None:
+    get_model()
     server = HTTPServer((HOST, PORT), Handler)
-    print(f"Mock API em http://{HOST}:{PORT}")
+    print(f"API de inferencia em http://{HOST}:{PORT}")
     print("Rotas: GET /health, GET /sample-response, POST /analyze")
     server.serve_forever()
 
