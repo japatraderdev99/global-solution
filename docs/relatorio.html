@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sentinela Orbital — Relatório · Sub GS 2026.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#16201c; --soft:#54635c; --line:#d8e0db;
+    --green:#1f7a4d; --green-d:#155e3a; --amber:#c98a1e; --red:#c0392b;
+    --bg:#ffffff; --panel:#f5f8f6;
+    --display:'Chakra Petch',system-ui,sans-serif;
+    --body:'Source Serif 4',Georgia,serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{font-family:var(--body); color:var(--ink); background:#e9edeb; line-height:1.62; font-size:11.2pt;}
+
+  /* página */
+  .page{
+    background:var(--bg); width:210mm; min-height:297mm;
+    margin:14px auto; padding:22mm 20mm; box-shadow:0 2px 16px rgba(0,0,0,.12);
+  }
+  @media print{
+    body{background:#fff;}
+    .page{width:auto;min-height:auto;margin:0;padding:0;box-shadow:none;}
+    .page + .page{page-break-before:always;}
+    h2{page-break-after:avoid;}
+    figure,table,pre,.card{page-break-inside:avoid;}
+    @page{size:A4; margin:18mm 16mm;}
+  }
+
+  /* tipografia */
+  h1,h2,h3,h4{font-family:var(--display); color:var(--green-d); line-height:1.2; font-weight:700;}
+  h2{font-size:18pt; margin:0 0 .5em; padding-bottom:.28em; border-bottom:2px solid var(--green);}
+  h3{font-size:13pt; margin:1.4em 0 .35em; color:var(--ink);}
+  h4{font-size:11pt; margin:1.1em 0 .25em; color:var(--soft); text-transform:uppercase; letter-spacing:.08em;}
+  p{margin:0 0 .8em;}
+  .eyebrow{font-family:var(--display); font-size:9.5pt; letter-spacing:.22em; text-transform:uppercase; color:var(--green); font-weight:600;}
+  a{color:var(--green-d);}
+  strong{color:var(--green-d);}
+  ul,ol{margin:0 0 .9em 0; padding-left:1.3em;} li{margin:.2em 0;}
+
+  /* capa */
+  .cover{display:flex; flex-direction:column; min-height:253mm;}
+  .cover-logo{width:170px;}
+  .cover-mid{flex:1; display:flex; flex-direction:column; justify-content:center;}
+  .cover-kicker{font-family:var(--display); letter-spacing:.26em; text-transform:uppercase; color:var(--green); font-size:11pt; font-weight:600;}
+  .cover h1{font-size:40pt; color:var(--ink); margin:.15em 0 .1em;}
+  .cover-sub{font-size:15pt; color:var(--soft); font-style:italic; max-width:36ch;}
+  .cover-rule{height:3px; width:90px; background:var(--green); margin:18px 0 26px;}
+  .cover-meta{font-size:11.5pt; line-height:1.9;}
+  .cover-meta b{font-family:var(--display);}
+  .cover-foot{border-top:1px solid var(--line); padding-top:12px; color:var(--soft); font-size:9.5pt; display:flex; justify-content:space-between;}
+
+  /* componentes */
+  figure{margin:1.1em 0;}
+  figure img{width:100%; border:1px solid var(--line); border-radius:6px;}
+  figcaption{font-size:9pt; color:var(--soft); margin-top:.5em; text-align:center; font-style:italic;}
+  .img-narrow{max-width:74%; margin-left:auto; margin-right:auto; display:block;}
+
+  pre{background:#10231b; color:#d9efe4; font-family:'SFMono-Regular',Consolas,monospace; font-size:8.6pt; line-height:1.5; padding:12px 14px; border-radius:6px; overflow:auto; margin:.9em 0;}
+  pre .c{color:#6f9d86;} /* comentário */
+  code{font-family:'SFMono-Regular',Consolas,monospace; font-size:.92em; background:var(--panel); padding:.05em .35em; border-radius:3px;}
+  pre code{background:none;padding:0;}
+
+  table{width:100%; border-collapse:collapse; font-size:10pt; margin:1em 0;}
+  th,td{border:1px solid var(--line); padding:6px 9px; text-align:left;}
+  th{background:var(--panel); font-family:var(--display); font-size:8.6pt; letter-spacing:.05em; text-transform:uppercase; color:var(--soft);}
+  td.num,th.num{text-align:right; font-variant-numeric:tabular-nums;}
+  tr.total td{font-weight:600; background:#f0f6f2;}
+
+  .card{background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--green); border-radius:0 6px 6px 0; padding:10px 14px; margin:1em 0; font-size:10pt;}
+  .card.warn{border-left-color:var(--amber);}
+  .kpi-row{display:flex; gap:14px; margin:1.1em 0;}
+  .kpi{flex:1; background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:12px 14px;}
+  .kpi b{display:block; font-family:var(--display); font-size:22pt; color:var(--green-d); line-height:1;}
+  .kpi span{font-size:8.6pt; color:var(--soft); text-transform:uppercase; letter-spacing:.08em;}
+
+  .diagram{margin:1.1em auto; max-width:430px; font-family:var(--display); font-size:9.4pt;}
+  .node{border:1.5px solid var(--green); border-radius:6px; padding:8px 12px; text-align:center; background:var(--panel); color:var(--ink);}
+  .node small{display:block; font-family:var(--body); font-style:italic; color:var(--soft); font-size:8.4pt;}
+  .arrow{text-align:center; color:var(--green); font-size:13pt; line-height:1.1;}
+  .pair{display:flex; gap:14px;} .pair .node{flex:1;}
+</style>
+</head>
+<body>
+
+<!-- ════════ CAPA ════════ -->
+<section class="page cover">
+  <img class="cover-logo" src="../assets/logo-fiap.png" alt="FIAP">
+  <div class="cover-mid">
+    <div class="cover-kicker">Sub Global Solution 2026.1 · Inteligência Artificial</div>
+    <h1>Sentinela Orbital</h1>
+    <div class="cover-rule"></div>
+    <p class="cover-sub">Detecção inteligente de queimadas e desmatamento na Amazônia por visão computacional orbital, IoT e nuvem.</p>
+    <div style="height:30px"></div>
+    <div class="cover-meta">
+      <div><b>Autor:</b> Guilherme Yamada Dantas — RM568506</div>
+      <div><b>Curso:</b> Graduação ON — Inteligência Artificial · FIAP</div>
+    </div>
+  </div>
+  <div class="cover-foot">
+    <span>Prova de Conceito (POC) — trabalho individual</span>
+    <span>2026</span>
+  </div>
+</section>
+
+<!-- ════════ 1. INTRODUÇÃO ════════ -->
+<section class="page">
+  <span class="eyebrow">Seção 1</span>
+  <h2>Introdução</h2>
+
+  <p>A exploração espacial deixou de ser apenas científica e tornou-se uma das maiores oportunidades tecnológicas e estratégicas da atualidade. Satélites produzem, diariamente, enormes volumes de imagens da superfície terrestre — um insumo que, combinado à Inteligência Artificial, pode ser convertido em decisões rápidas com impacto direto na vida das pessoas e no meio ambiente.</p>
+
+  <p>Este projeto responde à pergunta da Global Solution 2026.1:</p>
+  <div class="card"><em>“Como a Inteligência Artificial e as tecnologias digitais podem transformar a nova economia espacial e gerar impacto positivo na Terra?”</em></div>
+
+  <h3>1.1 O problema</h3>
+  <p>Queimadas e desmatamento na Amazônia são, com frequência, detectados tarde demais. Quanto mais cedo um foco é identificado, menor a área queimada e menores os danos ambientais, econômicos e sociais. A janela entre o início de um foco e a resposta de combate é decisiva — e é exatamente nessa janela que dados orbitais e IA podem atuar.</p>
+
+  <h3>1.2 A proposta — Sentinela Orbital</h3>
+  <p>O <strong>Sentinela Orbital</strong> é um sistema ponta a ponta de <strong>alerta precoce</strong> que:</p>
+  <ol>
+    <li><strong>Classifica imagens orbitais</strong> com um modelo de visão computacional (CNN) em três classes: <code>fogo</code>, <code>cicatriz de queimada</code> e <code>floresta saudável</code>;</li>
+    <li><strong>Recebe sinais de solo</strong> de um sensor simulado em ESP32 (fumaça e temperatura);</li>
+    <li><strong>Funde os dois sinais</strong> em uma API serverless na nuvem, gerando um <strong>nível de risco</strong>;</li>
+    <li><strong>Apresenta alertas e um mapa de risco</strong> em um dashboard de monitoramento.</li>
+  </ol>
+  <p>A combinação de um sinal <em>orbital</em> (visão de cima) com um sinal <em>de solo</em> (sensor local) reduz falsos negativos: um foco pode ser sugerido pela imagem e confirmado pela fumaça/temperatura no terreno, ou vice-versa.</p>
+
+  <h3>1.3 Cobertura da proposta</h3>
+  <table>
+    <tr><th>Eixo técnico</th><th>Como o projeto atende</th></tr>
+    <tr><td>Machine Learning / Visão Computacional</td><td>CNN treinada em PyTorch classificando imagens orbitais, com métricas reproduzíveis</td></tr>
+    <tr><td>Análise de dados / pipeline</td><td>Pipeline reproduzível de ingestão e rotulagem + EDA documentada</td></tr>
+    <tr><td>Computação em nuvem / serverless / APIs</td><td>API publicada no Google Cloud Run; modelo armazenado em Cloud Storage</td></tr>
+    <tr><td>Sensores / IoT / ESP32</td><td>Firmware ESP32 simulado (Wokwi) emitindo fumaça e temperatura</td></tr>
+    <tr><td>Dashboard inteligente</td><td>Front-end próprio com mapa de risco, métricas e alertas</td></tr>
+  </table>
+</section>
+
+<!-- ════════ 2. DESENVOLVIMENTO ════════ -->
+<section class="page">
+  <span class="eyebrow">Seção 2</span>
+  <h2>Desenvolvimento</h2>
+
+  <h3>2.1 Arquitetura da solução</h3>
+  <p>O sistema integra quatro componentes independentes, acoplados por um <strong>contrato de API</strong> estável (formato de requisição/resposta), o que permite desenvolver e testar cada parte em paralelo.</p>
+
+  <div class="diagram">
+    <div class="node">Imagem de satélite <small>Sentinel-2 (datasets públicos)</small></div>
+    <div class="arrow">↓</div>
+    <div class="node">Modelo de Visão Computacional (CNN) <small>fogo · cicatriz · floresta</small></div>
+    <div class="arrow">↓</div>
+    <div class="pair">
+      <div class="node">ESP32 / Wokwi <small>fumaça + temperatura</small></div>
+      <div class="node">API serverless (Cloud Run) <small>fusão dos sinais → risco</small></div>
+    </div>
+    <div class="arrow">↓</div>
+    <div class="node">Dashboard de alerta <small>mapa de risco · métricas · telemetria</small></div>
+  </div>
+
+  <h3>2.2 Dados e pipeline</h3>
+  <p>Em vez de um dataset pronto e de licença incerta, optou-se por <strong>derivar um dataset de classificação a partir de máscaras orbitais</strong> de duas fontes públicas com licença clara:</p>
+  <ul>
+    <li><strong>Sen2Fire</strong> (Zenodo, DOI 10.5281/zenodo.10881058, CC-BY-4.0) — patches Sentinel-2 com máscara de fogo ativo; origem da classe <code>fogo</code>.</li>
+    <li><strong>FLOGA</strong> (Orion-AI-Lab, dados CC-BY-4.0) — eventos de incêndio com máscara de área queimada; origem da classe <code>cicatriz de queimada</code>.</li>
+  </ul>
+  <p>Cada patch recebe um rótulo por <strong>cobertura dominante</strong>: se a fração de pixels positivos da máscara ultrapassa um limiar, a classe é atribuída; patches sem evidência relevante tornam-se negativos (<code>floresta saudável</code>). A regra central, em código:</p>
+<pre><code><span class="c"># proporção de pixels positivos define a classe do patch</span>
+def label_from_ratio(ratio, positive_label, positive_threshold, negative_threshold):
+    if ratio &gt;= positive_threshold:
+        return positive_label          <span class="c"># fogo / cicatriz</span>
+    if ratio &lt;= negative_threshold:
+        return "healthy_forest"        <span class="c"># negativo</span>
+    return None                        <span class="c"># zona intermediária: descartada</span></code></pre>
+
+  <p>O <strong>split treino/validação/teste é feito por grupo</strong> (cena, no Sen2Fire; evento, no FLOGA), garantindo que patches de uma mesma área não apareçam em conjuntos diferentes — evitando vazamento espacial. A verificação de vazamento confirmou <strong>zero grupos</strong> compartilhados entre splits.</p>
+
+  <h4>Análise exploratória (EDA)</h4>
+  <div class="kpi-row">
+    <div class="kpi"><b>5.900</b><span>amostras</span></div>
+    <div class="kpi"><b>325</b><span>fogo</span></div>
+    <div class="kpi"><b>69</b><span>cicatriz</span></div>
+    <div class="kpi"><b>5.506</b><span>floresta</span></div>
+  </div>
+  <figure>
+    <img src="img/dash-eda.png" alt="EDA no dashboard">
+    <figcaption>Vista de Dados do dashboard: distribuição por classe, matriz split × classe, verificação de vazamento e proveniência das fontes.</figcaption>
+  </figure>
+  <div class="card warn"><strong>Limitação declarada:</strong> o dataset é fortemente desbalanceado — <code>floresta</code> concentra 93% das amostras e <code>cicatriz</code> apenas 1,2% (69 amostras). Isso decorre da resolução de 60 m adotada (que dilui a fração queimada por patch) e é tratado no treino por rebalanceamento, além de orientar o uso de <strong>F1 macro</strong> como métrica principal.</div>
+</section>
+
+<section class="page">
+  <h3>2.3 Modelo de Visão Computacional</h3>
+  <p>O modelo é uma CNN compacta em <strong>PyTorch</strong>. A maior dificuldade foi unificar duas fontes com bandas diferentes; a solução foi projetar cada patch em uma <strong>representação comum de 5 canais</strong> — RGB mais dois índices espectrais sensíveis a vegetação e queimada (NDVI e NBR), em 64×64:</p>
+<pre><code><span class="c"># índice normalizado robusto (NDVI = NIR,RED | NBR = NIR,SWIR2)</span>
+def safe_index(a, b):
+    denom = a + b
+    out = np.zeros_like(a, dtype=np.float32)
+    np.divide(a - b, denom, out=out, where=np.abs(denom) &gt; 1e-6)
+    return np.clip(out, -1.0, 1.0)
+
+<span class="c"># entrada final: RGB + NDVI + NBR</span>
+return np.concatenate([rgb, ndvi[None], nbr[None]], axis=0)</code></pre>
+
+  <p>A arquitetura empilha blocos convolucionais com <em>pooling</em> e uma cabeça linear:</p>
+<pre><code>class SmallBurnCNN(nn.Module):
+    def __init__(self, in_channels=5, num_classes=3):
+        super().__init__()
+        self.features = nn.Sequential(
+            conv_block(in_channels, 16), nn.MaxPool2d(2),
+            conv_block(16, 32),          nn.MaxPool2d(2),
+            conv_block(32, 64),          nn.MaxPool2d(2),
+            conv_block(64, 96),          nn.AdaptiveAvgPool2d(1))
+        self.head = nn.Sequential(nn.Flatten(), nn.Dropout(0.2),
+                                  nn.Linear(96, num_classes))</code></pre>
+
+  <p>Para enfrentar o desbalanceamento, o treino combina <strong>quatro técnicas</strong>: subamostragem da classe majoritária (650 amostras), <code>WeightedRandomSampler</code> inverso à frequência, pesos de classe na função de perda e <em>data augmentation</em> reforçando as classes minoritárias (espelhamento, rotação e leve <em>jitter</em>).</p>
+
+  <h4>Resultados no conjunto de teste</h4>
+  <div class="kpi-row">
+    <div class="kpi"><b>0,40</b><span>F1 macro</span></div>
+    <div class="kpi"><b>0,94</b><span>recall · fogo</span></div>
+    <div class="kpi"><b>0,62</b><span>acurácia</span></div>
+  </div>
+  <table>
+    <tr><th>Classe</th><th class="num">Precisão</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Suporte</th></tr>
+    <tr><td>fogo</td><td class="num">0,220</td><td class="num">0,938</td><td class="num">0,356</td><td class="num">96</td></tr>
+    <tr><td>cicatriz</td><td class="num">0,063</td><td class="num">0,462</td><td class="num">0,110</td><td class="num">13</td></tr>
+    <tr><td>floresta</td><td class="num">0,978</td><td class="num">0,587</td><td class="num">0,734</td><td class="num">990</td></tr>
+  </table>
+  <figure class="img-narrow">
+    <img src="eda/confusion_matrix.png" alt="Matriz de confusão">
+    <figcaption>Matriz de confusão no teste (linhas = real, colunas = predito).</figcaption>
+  </figure>
+  <div class="card"><strong>Leitura honesta:</strong> para um sistema de <em>alerta precoce</em>, o <strong>recall de fogo (0,94)</strong> é a métrica mais relevante — o sistema deixa passar pouquíssimos focos reais. O custo é a precisão menor (falsos alarmes), aceitável em um <strong>triador</strong> que encaminha áreas para revisão humana. A classe <code>cicatriz</code> tem desempenho fraco, limitado pelo suporte mínimo (13 amostras de teste); é a principal frente de evolução.</p></div>
+</section>
+
+<section class="page">
+  <h3>2.4 Computação em nuvem e API serverless</h3>
+  <p>A inferência e a fusão dos sinais são expostas por uma <strong>API serverless no Google Cloud Run</strong> (container que escala a zero), com o artefato do modelo versionado em <strong>Cloud Storage</strong>. O endpoint é público e está ativo durante a demonstração. O contrato define entradas (imagem + sensor) e saídas (classe orbital, nível de sinal, risco e recomendação).</p>
+  <p>A regra de <strong>fusão de risco</strong> combina o sinal orbital e o de solo em um escore de 0 a 100:</p>
+<pre><code><span class="c"># orbital + solo → escore e nível de risco</span>
+score = 10
+if orbital_class == "fire":        score += 50
+elif orbital_class == "burned_scar": score += 30
+score += {"low":0,"moderate":15,"high":30,"critical":40}[sensor_level]
+score = max(0, min(100, score))
+level = "critical" if score &gt;= 85 else "high" if score &gt;= 65 \
+        else "moderate" if score &gt;= 35 else "low"</code></pre>
+  <p>O serviço trata validação de entrada (rejeitando valores ausentes, não numéricos ou fora de faixa com <code>400 invalid_payload</code>) e habilita CORS, permitindo que o dashboard o consuma diretamente do navegador.</p>
+
+  <h3>2.5 IoT — sensor de solo (ESP32 / Wokwi)</h3>
+  <p>O componente de solo é um <strong>ESP32 simulado no Wokwi</strong> (declarado abertamente como simulação) que lê fumaça e temperatura e emite leituras no exato formato esperado pela API:</p>
+<pre><code>{"device_id":"esp32-wokwi-001","smoke_ppm":620,"temperature_c":42.6,
+ "humidity_pct":31.4,"latitude":-3.4653,"longitude":-62.2159}</code></pre>
+  <p>A simulação é reproduzível e gravável, e o mesmo payload alimenta a fusão de risco da API — fechando o ciclo solo → nuvem → dashboard.</p>
+
+  <h3>2.6 Dashboard de monitoramento</h3>
+  <p>O dashboard foi construído sob medida (HTML, CSS e JavaScript puro com a biblioteca de mapas Leaflet), sem framework — leve e sem etapa de build. A interface adota a metáfora de um <strong>console de estação de solo</strong>, com duas vistas: <em>Operação</em> (alerta, classificação, telemetria e mapa) e <em>Dados</em> (EDA e métricas do modelo).</p>
+  <figure>
+    <img src="img/dash-ops.png" alt="Dashboard — operação">
+    <figcaption>Vista de Operação consumindo a API ao vivo: índice de risco, classificação orbital, telemetria do sensor e mapa de risco sobre a Amazônia.</figcaption>
+  </figure>
+  <figure>
+    <img src="img/dash-model.png" alt="Dashboard — métricas do modelo">
+    <figcaption>Vista de Dados: métricas do modelo por classe e matriz de confusão, lidas do mesmo artefato gerado no treino.</figcaption>
+  </figure>
+
+  <h3>2.7 Metodologia</h3>
+  <p>O desenvolvimento foi iterativo e por fases (fundação → dados → modelo → nuvem → IoT → dashboard → documentação), com <strong>revisão cruzada e dupla verificação</strong> a cada entrega: cada passo é construído, criticamente revisado, ajustado e validado antes de avançar. As decisões técnicas relevantes ficam registradas em <code>docs/decisoes/</code>.</p>
+</section>
+
+<!-- ════════ 3. RESULTADOS ════════ -->
+<section class="page">
+  <span class="eyebrow">Seção 3</span>
+  <h2>Resultados Esperados</h2>
+  <p>O Sentinela Orbital entrega um <strong>fluxo ponta a ponta funcional e demonstrável</strong>:</p>
+  <ul>
+    <li><strong>Pipeline de dados reproduzível</strong> que transforma máscaras orbitais de duas fontes públicas em um dataset de classificação de três classes, com EDA documentada e split sem vazamento.</li>
+    <li><strong>Modelo de visão computacional treinado</strong> e avaliado com métricas honestas — destaque para o <strong>recall de fogo de 0,94</strong>, alinhado ao objetivo de alerta precoce.</li>
+    <li><strong>API serverless ativa na nuvem</strong> (Cloud Run) que funde sinal orbital e de solo em um nível de risco, com o modelo versionado em Cloud Storage.</li>
+    <li><strong>Sensor IoT simulado</strong> (ESP32/Wokwi) integrado ao mesmo contrato de dados.</li>
+    <li><strong>Dashboard próprio</strong> que consome a API ao vivo e apresenta alerta, mapa, telemetria e as métricas do modelo.</li>
+  </ul>
+  <p>O impacto pretendido é direto: <strong>quanto mais cedo um foco é sinalizado, menor a área queimada</strong>. Como ferramenta de triagem, o sistema prioriza não deixar passar focos reais, encaminhando áreas suspeitas para verificação — transformando dados da economia espacial em resposta mais rápida no solo.</p>
+
+  <h3>3.1 Limitações</h3>
+  <ul>
+    <li>A classe <code>cicatriz de queimada</code> tem suporte muito baixo (60 m de resolução), o que limita seu desempenho e a confiabilidade de suas métricas.</li>
+    <li>O dataset é desbalanceado; mitigamos no treino, mas a melhor solução é mais dado da classe minoritária.</li>
+    <li>O sensor de solo é simulado (Wokwi), não físico — declarado abertamente.</li>
+  </ul>
+</section>
+
+<!-- ════════ 4. CONCLUSÕES ════════ -->
+<section class="page">
+  <span class="eyebrow">Seção 4</span>
+  <h2>Conclusões</h2>
+  <p>O projeto demonstra, de ponta a ponta, como dados da nova economia espacial — combinados a IoT, machine learning e computação em nuvem — podem gerar impacto positivo na Terra, aplicados a um problema crítico do Brasil: a detecção precoce de queimadas e desmatamento na Amazônia.</p>
+  <p>Mais do que um número de acurácia, o resultado relevante é a <strong>arquitetura integrada e funcional</strong> e a postura de <strong>honestidade técnica</strong>: as métricas reais são apresentadas com suas limitações, e as decisões (fontes, resolução, rebalanceamento, escolha de métrica) são justificadas. O recall de fogo elevado mostra que, mesmo com um modelo compacto e dados desbalanceados, o sistema cumpre seu papel de <em>alerta precoce</em>.</p>
+
+  <h3>4.1 Trabalhos futuros</h3>
+  <ul>
+    <li><strong>Reforçar a classe cicatriz</strong> com dados FLOGA em resolução de 20 m (bandas SWIR mais detalhadas) e patches menores.</li>
+    <li><strong>Evoluir para segmentação</strong> pixel a pixel, delimitando a área do foco e não apenas classificando o patch.</li>
+    <li><strong>Ingestão de imagens mais próxima do tempo real</strong> a partir de provedores de imagem orbital.</li>
+    <li><strong>Sensor físico</strong> em campo, substituindo a simulação.</li>
+  </ul>
+
+  <h2 style="margin-top:1.6em;">Links</h2>
+  <table>
+    <tr><th>Recurso</th><th>Endereço</th></tr>
+    <tr><td>Repositório do projeto</td><td><a href="https://github.com/japatraderdev99/global-solution">github.com/japatraderdev99/global-solution</a></td></tr>
+    <tr><td>Vídeo demonstrativo (YouTube · Não Listado)</td><td><a href="https://youtu.be/cfvNSuIKALU">https://youtu.be/cfvNSuIKALU</a></td></tr>
+  </table>
+
+  <p style="margin-top:2.4em; color:var(--soft); font-size:9.5pt; border-top:1px solid var(--line); padding-top:10px;">Sentinela Orbital · Sub Global Solution 2026.1 · Guilherme Yamada Dantas — RM568506</p>
+</section>
+
+</body>
+</html>
